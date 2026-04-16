@@ -93,7 +93,7 @@ object SpawningSubprocessesNewTests extends TestSuite {
             stdout =
               os.ProcessOutput((buf, len) => lineCount += buf.slice(0, len).count(_ == '\n'))
           )
-          lineCount ==> 22
+          lineCount ==> 24
         }
       }
       test - prep { wd =>
@@ -104,7 +104,7 @@ object SpawningSubprocessesNewTests extends TestSuite {
             cwd = wd,
             stdout = os.ProcessOutput.Readlines(line => lineCount += 1)
           )
-          lineCount ==> 22
+          lineCount ==> 24
         }
       }
     }

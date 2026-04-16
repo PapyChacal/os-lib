@@ -120,7 +120,7 @@ object ExampleTests extends TestSuite {
       // ignore multiline (second file) because its size varies
       largestThree.filterNot(_._2.last == "Multi Line.txt") ==> Seq(
         (711, wd / "misc/binary.png"),
-        (22, wd / "folder1/one.txt")
+        (51, wd / "bin/test-path-env")
       )
     }
 
