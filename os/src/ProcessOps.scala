@@ -610,6 +610,34 @@ case class ProcGroup private[os] (commands: Seq[proc]) {
 @experimental
 object ProcessOps {
   val spawnHook = new scala.util.DynamicVariable[os.Path => Unit]({ p => () })
+
+  private def resolveExecutable(command: Seq[String], cwd: Path, environment: java.util.Map[String, String]): Seq[String] = {
+    if (command.isEmpty) command
+    else {
+      val executable = command.head
+      os.FilePath(executable) match {
+        case absolute: Path => absolute.toString +: command.tail
+        case relative: FilePath => 
+          val wd = Option(cwd).getOrElse(os.pwd)
+          val wdPath = os.Path(relative, wd)
+          if (os.exists(wdPath)) (wdPath).toString +: command.tail
+          else {
+            val pathValue = Option(environment.get("PATH")).getOrElse(sys.env("PATH"))
+            val pathEntries = pathValue.split(java.io.File.pathSeparator, -1).map(os.FilePath(_)).map(os.Path(_, wd))
+            pathEntries
+              .map(os.Path(_,wd) / executable)
+              .filter(os.exists.apply(_))
+              .map(path => path.toString +: command.tail)
+              .headOption match {
+                case Some(resolvedCommand) => resolvedCommand
+                case None =>
+                  throw new IOException(s"Cannot run program $executable: executable not found in PATH: $pathValue")
+              }
+          }
+      }
+    }
+  }
+
   def buildProcess(
       command: Seq[String],
       cwd: Path = null,
@@ -646,12 +674,14 @@ object ProcessOps {
 
     addToProcessEnv(env)
 
+    val resolvedCommand = resolveExecutable(command, cwd, environment)
+
     val dir = Option(cwd).getOrElse(os.pwd)
     builder.directory(dir.toIO)
     spawnHook.value.apply(dir)
 
     builder
-      .command(command: _*)
+      .command(resolvedCommand: _*)
       .redirectInput(stdin.redirectFrom)
       .redirectOutput(stdout.redirectTo)
       .redirectError(stderr.redirectTo)
