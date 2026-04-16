@@ -112,7 +112,8 @@ object SpawningSubprocessesNewTests extends TestSuite {
     test("Env PATH") {
       test - prep { wd =>
         if (TestUtil.isInstalled("python") && Unix()) {
-          val res = os.proc("test-path-env").call(env = Map("PATH" -> s"${wd / "bin"}:${sys.env("PATH")}"))
+          val res =
+            os.proc("test-path-env").call(env = Map("PATH" -> s"${wd / "bin"}:${sys.env("PATH")}"))
           res.out.text() ==> "Hello world!"
         }
       }
