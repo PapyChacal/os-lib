@@ -93,7 +93,7 @@ object SpawningSubprocessesNewTests extends TestSuite {
             stdout =
               os.ProcessOutput((buf, len) => lineCount += buf.slice(0, len).count(_ == '\n'))
           )
-          lineCount ==> 22
+          lineCount ==> 24
         }
       }
       test - prep { wd =>
@@ -104,7 +104,17 @@ object SpawningSubprocessesNewTests extends TestSuite {
             cwd = wd,
             stdout = os.ProcessOutput.Readlines(line => lineCount += 1)
           )
-          lineCount ==> 22
+          lineCount ==> 24
+        }
+      }
+    }
+
+    test("Env PATH") {
+      test - prep { wd =>
+        if (TestUtil.isInstalled("python") && Unix()) {
+          val res =
+            os.proc("test-path-env").call(env = Map("PATH" -> s"${wd / "bin"}:${sys.env("PATH")}"))
+          res.out.text() ==> "Hello world!"
         }
       }
     }
